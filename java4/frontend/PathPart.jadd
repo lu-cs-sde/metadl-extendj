@@ -125,6 +125,7 @@ aspect PathPart {
     public CompilationUnit parseCompilationUnit(Program program) throws IOException {
       InputStream is = openInputStream();
       try {
+        program.trace.pushEvent("Java parsing", pathName());
         if (program.options().verbose()) {
           System.out.print("Loading " + sourceName());
         }
@@ -146,6 +147,7 @@ aspect PathPart {
         System.err.println("Unexpected error of kind " + e.getClass().getName());
         throw new Error(sourceName() + ": " + e.getMessage(), e);
       } finally {
+        program.trace.popEvent();
         if (is != null) {
           try {
             is.close();
@@ -195,6 +197,7 @@ aspect PathPart {
     public CompilationUnit parseCompilationUnit(Program program) throws IOException {
       InputStream is = openInputStream();
       try {
+        program.trace.pushEvent("Bytecode parsing", pathName());
         if (program.options().verbose()) {
           System.out.print("Loading " + sourceName());
         }
@@ -218,6 +221,7 @@ aspect PathPart {
       } catch (Exception e) {
         throw new Error("Error loading classfile " + sourceName(), e);
       } finally {
+        program.trace.popEvent();
         if (is != null) {
           try {
             is.close();

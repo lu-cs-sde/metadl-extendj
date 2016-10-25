@@ -49,6 +49,7 @@
 			visitCheck="false"
 			cacheCycle="false"
 			outdir="${gen.dir}"
+			tracing="compute"
 			>
 			<fileset dir="${java4.dir}/grammar">
 				<include name="*.ast"/>
@@ -134,6 +135,7 @@
 			visitCheck="false"
 			cacheCycle="false"
 			outdir="${gen.dir}"
+			tracing="compute"
 			>
 			<fileset dir="${java4.dir}/grammar">
 				<include name="*.ast"/>

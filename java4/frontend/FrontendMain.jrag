@@ -30,6 +30,7 @@
  */
 
 import org.jastadd.util.*;
+import org.extendj.TraceReceiver;
 
 import java.util.Collections;
 
@@ -40,6 +41,7 @@ aspect FrontendMain {
   public long Program.errorCheckTime;
   public int Program.numJavaFiles;
   public int Program.numClassFiles;
+  public final TraceReceiver Program.trace = new TraceReceiver("ExtendJ");
 
   /**
    * Reset the profile statistics.
@@ -135,7 +137,6 @@ aspect FrontendMain {
      * error, 4 on unhandled error
      */
     public int run(String[] args, BytecodeReader reader, JavaParser parser) {
-
       program.resetStatistics();
       program.initBytecodeReader(reader);
       program.initJavaParser(parser);
@@ -158,12 +159,18 @@ aspect FrontendMain {
         return EXIT_SUCCESS;
       }
 
+      if (program.options().hasOption("-Xtrace")) {
+        program.trace().setReceiver(program.trace);
+      }
+
       Collection<CompilationUnit> work = new LinkedList<CompilationUnit>();
 
       try {
+        program.trace.pushEvent("Sourcefile parsing");
         for (String file : files) {
           program.addSourceFile(file);
         }
+        program.trace.popEvent();
 
         TypeDecl object = program.lookupType("java.lang", "Object");
         if (object.isUnknown()) {
@@ -212,13 +219,17 @@ aspect FrontendMain {
           return compileResult;
         }
 
+        program.trace.pushEvent("Code generation");
         for (CompilationUnit unit : work) {
           if (unit != null && unit.fromSource()) {
             long start = System.nanoTime();
+            program.trace.pushEvent("processNoErrors", unit.pathName());
             processNoErrors(unit);
+            program.trace.popEvent();
             program.codeGenTime += System.nanoTime() - start;
           }
         }
+        program.trace.popEvent();
 
       } catch (AbstractClassfileParser.ClassfileFormatError e) {
         System.err.println(e.getMessage());
@@ -228,6 +239,25 @@ aspect FrontendMain {
         t.printStackTrace(System.err);
         return EXIT_UNHANDLED_ERROR;
       } finally {
+        if (program.options().hasOption("-Xtrace")) {
+          try {
+            String host = "localhost";
+            int port = 6834;
+            if (program.options().hasValueForOption("-Xtrace")) {
+              String address = program.options().getValueForOption("-Xtrace");
+              int sep = address.indexOf(':');
+              if (sep == -1) {
+                host = address;
+              } else {
+                host = address.substring(0, sep);
+                port = Integer.parseInt(address.substring(sep + 1, address.length()));
+              }
+            }
+            program.trace.sendTo(host, port);
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+        }
         if (program.options().hasOption("-profile")) {
           program.printStatistics(System.out);
         }
@@ -248,6 +278,7 @@ aspect FrontendMain {
     protected int processCompilationUnit(CompilationUnit unit) throws Error {
       if (unit != null && unit.fromSource()) {
         try {
+          program.trace.pushEvent("processCompilationUnit", unit.pathName());
           Collection<Problem> errors = unit.parseErrors();
           Collection<Problem> warnings = EMPTY_PROBLEM_LIST;
           // Compute static semantic errors when there are no parse errors
@@ -269,6 +300,8 @@ aspect FrontendMain {
         } catch (Error e) {
           System.err.println("Encountered error while processing " + unit.pathName());
           throw e;
+        } finally {
+          program.trace.popEvent();
         }
       }
       return EXIT_SUCCESS;
@@ -308,6 +341,9 @@ aspect FrontendMain {
       // Non-javac options.
       options.addKeyOption("-profile"); // Output profiling information.
       options.addKeyOption("-debug"); // Extra debug checks and information.
+
+      options.addKeyValueOption("-Xtrace"); // Log attribute evaluation traces.
+          // The value for -Xtrace is the network address (host:port) to send the trace to.
 
       // These unused nonstandard options with arguments are here added so that
       // their arguments are discarded when parsing command-line options.

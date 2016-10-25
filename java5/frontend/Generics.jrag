@@ -950,6 +950,7 @@ aspect LookupParTypeDecl {
     if (typeArgs.isEmpty()) {
       // According to JLSv8 4.6 (Type Erasure), the signature of members in the
       // erased type have no parameterized types or type variables.
+      program().trace.pushEvent("lookup erased type");
       typeDecl = new RawClassDecl(
           getModifiers().treeCopyNoTransform(),
           getID(),
@@ -957,7 +958,9 @@ aspect LookupParTypeDecl {
           parameterization,
           hasSuperClass() ? new Opt<Access>(getSuperClass().erasedCopy()) : new Opt<Access>(),
           erasedAccessList(getImplementsList()));
+      program().trace.popEvent();
     } else {
+      program().trace.pushEvent("lookup par type");
       typeDecl = new ParClassDecl(
           getModifiers().treeCopyNoTransform(),
           getID(),
@@ -965,6 +968,7 @@ aspect LookupParTypeDecl {
           parameterization,
           getSuperClassOpt().treeCopyNoTransform(),
           getImplementsList().treeCopyNoTransform());
+      program().trace.popEvent();
     }
     return typeDecl;
   }
