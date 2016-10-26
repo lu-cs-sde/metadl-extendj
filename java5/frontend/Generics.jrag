@@ -1433,12 +1433,12 @@ aspect LookupParTypeDecl {
    * Copies the signature of this body decl. The type and name and parameters
    * are copied where applicable, but the body or initializer is not copied.
    */
-  public BodyDecl BodyDecl.signatureCopy() {
+  syn BodyDecl BodyDecl.signatureCopy() {
     throw new Error("Can not susbtitute type parameters in body decl of type "
         + getClass().getSimpleName());
   }
 
-  public BodyDecl MethodDecl.signatureCopy() {
+  eq MethodDecl.signatureCopy() {
     return new MethodDeclSubstituted(
         getModifiers().treeCopyNoTransform(),
         getTypeAccessNoTransform().treeCopyNoTransform(),
@@ -1449,7 +1449,7 @@ aspect LookupParTypeDecl {
         this);
   }
 
-  public BodyDecl GenericMethodDecl.signatureCopy() {
+  eq GenericMethodDecl.signatureCopy() {
     return new GenericMethodDeclSubstituted(
         getModifiers().treeCopyNoTransform(),
         getTypeAccessNoTransform().treeCopyNoTransform(),
@@ -1465,7 +1465,7 @@ aspect LookupParTypeDecl {
 
   syn GenericConstructorDecl GenericConstructorDecl.original() = this;
 
-  public BodyDecl ConstructorDecl.signatureCopy() {
+  eq ConstructorDecl.signatureCopy() {
     return new ConstructorDeclSubstituted(
         getModifiers().treeCopyNoTransform(),
         getID(),
@@ -1476,7 +1476,7 @@ aspect LookupParTypeDecl {
         this);
   }
 
-  public BodyDecl GenericConstructorDecl.signatureCopy() {
+  eq GenericConstructorDecl.signatureCopy() {
     return new GenericConstructorDeclSubstituted(
         getModifiers().treeCopyNoTransform(),
         getID(),
@@ -1488,7 +1488,7 @@ aspect LookupParTypeDecl {
         this);
   }
 
-  public BodyDecl FieldDecl.signatureCopy() {
+  eq FieldDecl.signatureCopy() {
     List<FieldDeclarator> decls = new List<FieldDeclarator>();
     for (FieldDeclarator decl : getDeclaratorList()) {
       decls.add(decl.signatureCopy());
@@ -1503,15 +1503,15 @@ aspect LookupParTypeDecl {
   /**
    * Copies the declarator without initializer.
    */
-  public FieldDeclarator FieldDeclarator.signatureCopy() {
+  syn FieldDeclarator FieldDeclarator.signatureCopy() {
     return new FieldDeclarator(getID(), getDimsList().treeCopyNoTransform(), new Opt<Expr>());
   }
 
-  public BodyDecl MemberClassDecl.signatureCopy() {
+  eq MemberClassDecl.signatureCopy() {
     return new MemberClassDecl(getClassDecl().signatureCopy());
   }
 
-  public ClassDecl ClassDecl.signatureCopy() {
+  syn ClassDecl ClassDecl.signatureCopy() {
     return new ClassDeclSubstituted(
         getModifiers().treeCopyNoTransform(),
         getID(),
@@ -1520,7 +1520,7 @@ aspect LookupParTypeDecl {
         this);
   }
 
-  public ClassDecl GenericClassDecl.signatureCopy() {
+  eq GenericClassDecl.signatureCopy() {
     return new GenericClassDeclSubstituted(
         getModifiers().treeCopyNoTransform(),
         getID(),
@@ -1535,11 +1535,11 @@ aspect LookupParTypeDecl {
    *
    * <p>Occurrences of type variables are replaced by their type bound.
    */
-  public BodyDecl BodyDecl.erasedCopy() {
+  syn BodyDecl BodyDecl.erasedCopy() {
     throw new Error("Can not erase types in body decl of type " + getClass().getSimpleName());
   }
 
-  public BodyDecl MethodDecl.erasedCopy() {
+  eq MethodDecl.erasedCopy() {
     return new MethodDeclSubstituted(
         getModifiers().treeCopyNoTransform(),
         getTypeAccess().erasedCopy(),
@@ -1550,7 +1550,7 @@ aspect LookupParTypeDecl {
         this);
   }
 
-  public BodyDecl GenericMethodDecl.erasedCopy() {
+  eq GenericMethodDecl.erasedCopy() {
     return new GenericMethodDeclErased(
         getModifiers().treeCopyNoTransform(),
         getTypeAccess().erasedCopy(),
@@ -1562,7 +1562,7 @@ aspect LookupParTypeDecl {
         this);
   }
 
-  public BodyDecl ConstructorDecl.erasedCopy() {
+  eq ConstructorDecl.erasedCopy() {
     return new ConstructorDeclSubstituted(
         getModifiers().treeCopyNoTransform(),
         getID(),
@@ -1573,7 +1573,7 @@ aspect LookupParTypeDecl {
         this);
   }
 
-  public BodyDecl GenericConstructorDecl.erasedCopy() {
+  eq GenericConstructorDecl.erasedCopy() {
     return new GenericConstructorDeclErased(
         getModifiers().treeCopyNoTransform(),
         getID(),
@@ -1585,7 +1585,7 @@ aspect LookupParTypeDecl {
         this);
   }
 
-  public BodyDecl FieldDecl.erasedCopy() {
+  eq FieldDecl.erasedCopy() {
     List<FieldDeclarator> decls = new List<FieldDeclarator>();
     for (FieldDeclarator decl : getDeclaratorList()) {
       decls.add(decl.signatureCopy());
@@ -1597,11 +1597,11 @@ aspect LookupParTypeDecl {
         this);
   }
 
-  public BodyDecl MemberClassDecl.erasedCopy() {
+  eq MemberClassDecl.erasedCopy() {
     return new MemberClassDecl(getClassDecl().erasedCopy());
   }
 
-  public ClassDecl ClassDecl.erasedCopy() {
+  syn ClassDecl ClassDecl.erasedCopy() {
     return new ClassDeclErased(
         getModifiers().treeCopyNoTransform(),
         getID(),
@@ -1721,7 +1721,7 @@ aspect LookupParTypeDecl {
    *
    * <p>The bodies of methods are not copied to the substituted version.
    */
-  protected List<BodyDecl> TypeDecl.substitutedBodyDecls() {
+  syn List<BodyDecl> TypeDecl.substitutedBodyDecls() {
     List<BodyDecl> list = new List<BodyDecl>();
     for (BodyDecl decl : getBodyDeclList()) {
       if (decl.isSubstitutable()) {
