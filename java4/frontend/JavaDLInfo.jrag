@@ -1,0 +1,75 @@
+aspect JavaDLInfo {
+	public Object ASTNode.javaDLInfo = null;
+	public int ASTNode.javaDLNum = -1;
+
+	public Object ASTNode.type() { return null; }
+	public Object ASTNode.decl() { return null; }
+	public Object ASTNode.genericDecl() { return null; }
+
+	syn lazy int ASTNode.rpoNum() {
+		if (getNumChild() != 0) {
+			ASTNode lastChild = getChild(getNumChild() - 1);
+			if (lastChild.rpoNum() != NTACHILD)
+				return lastChild.rpoNum() + 1;
+			return NTACHILD;
+		} else {
+			int ls = leftSiblingsRpoNum();
+			if (ls != NTACHILD)
+				return ls + 1;
+			else
+				return NTACHILD;
+		}
+	}
+
+	static int ASTNode.NOLEFTSIBLING = -1;
+	static int ASTNode.NTACHILD = -2;
+
+	inh lazy int ASTNode.leftSiblingsRpoNum();
+	eq ASTNode.getChild(int i).leftSiblingsRpoNum() {
+		if (i == 0) {
+			if (this instanceof CompilationUnit)
+				return NOLEFTSIBLING;
+			else return leftSiblingsRpoNum();
+		} else if (i > 0) {
+			return getChild(i - 1).rpoNum();
+		} else {
+			// i < 0, this is not a proper child, it is an NTA
+			return NTACHILD;
+		}
+	}
+
+	inh lazy ASTNode ASTNode.leftSibling();
+
+	eq ASTNode.getChild(int i).leftSibling() {
+		if (i == 0) {
+			if (this instanceof CompilationUnit)
+				return null;
+			return this.leftSibling();
+		} else {
+			return getChild(i - 1);
+		}
+	}
+
+	inh ASTNode ASTNode.rewrittenFrom();
+	eq ASTNode.getChild(int i).rewrittenFrom() {
+		if (i < 0)
+			return null;
+
+		if (getChildNoTransform(i) != getChild(i))
+			return getChildNoTransform(i);
+		return null;
+	}
+
+	syn ASTNode ASTNode.rewrittenTo() {
+		if (!canRewrite())
+			return null;
+		return rewrittenNode();
+	}
+
+
+	// eq ASTNode.getChildNoTransform(int i).rewrittenTo() {
+	// 	if (getChildNoTransform(i) != getChild(i))
+	// 		return getChild(i);
+	// 	return null;
+	// }
+}
