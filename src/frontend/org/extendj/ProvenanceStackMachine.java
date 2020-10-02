@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.HashMap;
 import org.extendj.ast.ASTNode;
 import org.extendj.ast.ASTState;
+import java.util.Collections;
 
 interface StackEntry {
 	public Object execute(Stack<StackEntry> stack);
@@ -149,6 +150,25 @@ public class ProvenanceStackMachine implements ASTState.Trace.Receiver {
 		addAndExecute(new AttributeEnd(new AttributeValue(node, attribute, params), attrToFile));
 	}
 
+	public Set<String> getSources(AttributeValue v) {
+		if (!attrToFile.containsKey(v))
+			return Collections.emptySet();
+		return Collections.unmodifiableSet(attrToFile.get(v));
+	}
+
+
+	public Set<String> getSources(ASTNode n, String attrSig) {
+		return getSources(new AttributeValue(n, attrSig, ""));
+	}
+
+	public Set<String> getSources() {
+		return ((FileSet) stack.peek()).getFiles();
+	}
+
+	public void reset() {
+		stack.clear();
+	}
+
 	@Override
 	public void accept(ASTState.Trace.Event event, ASTNode node, String attribute,
 					   Object params, Object value) {
@@ -162,5 +182,9 @@ public class ProvenanceStackMachine implements ASTState.Trace.Receiver {
 			break;
 		}
 		}
+	}
+
+	@Override public String toString() {
+		return stack.toString() + "\n" + attrToFile.toString();
 	}
 }
