@@ -31,6 +31,7 @@
 
 import org.jastadd.util.*;
 import org.extendj.TraceReceiver;
+import org.extendj.ProvenanceStackMachine;
 
 import java.util.Collections;
 
@@ -42,6 +43,7 @@ aspect FrontendMain {
   public int Program.numJavaFiles;
   public int Program.numClassFiles;
   public final TraceReceiver Program.trace = new TraceReceiver("ExtendJ");
+  public final ProvenanceStackMachine Program.provenance = new ProvenanceStackMachine();
 
   /**
    * Reset the profile statistics.
@@ -162,6 +164,8 @@ aspect FrontendMain {
       if (program.options().hasOption("-Xtrace")) {
         program.trace().setReceiver(program.trace);
       }
+
+      program.trace().setReceiver(program.provenance);
 
       Collection<CompilationUnit> work = new LinkedList<CompilationUnit>();
 
