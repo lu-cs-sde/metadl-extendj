@@ -42,6 +42,10 @@ class AttributeValue {
 		}
 		return r;
 	}
+
+	@Override public String toString() {
+		return n.getClass() + "::" + attribute;
+	}
 }
 
 class AttributeBegin implements StackEntry {
@@ -58,6 +62,10 @@ class AttributeBegin implements StackEntry {
 		// do nothing
 		return null;
 	}
+
+	@Override public String toString() {
+		return "ATTRIBUTE-BEGIN: " + attr;
+	}
 }
 
 class AttributeEnd implements StackEntry {
@@ -69,6 +77,10 @@ class AttributeEnd implements StackEntry {
 	}
 
 	@Override public Object execute(Stack<StackEntry> stack) {
+		// System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		// System.out.println(stack);
+		// System.out.println("====================================");
+
 		StackEntry top = stack.pop();
 		assert top == this;
 
@@ -88,14 +100,21 @@ class AttributeEnd implements StackEntry {
 			} else if (stack.peek() instanceof AttributeBegin) {
 				top = stack.pop();
 				assert ((AttributeBegin) top).getAttributeValue().equals(attr);
-				stack.push(new FileSet(fileList));
+				if (!fileList.isEmpty())
+					stack.push(new FileSet(fileList));
 				break;
 			} else {
 				throw new RuntimeException("Unexpected entry on top of the stack: " + stack.peek());
 			}
 		} while (!stack.empty());
 
+		// System.out.println(stack);
+
 		return null;
+	}
+
+	@Override public String toString() {
+		return "ATTRIBUTE-END: " + attr;
 	}
 }
 
@@ -112,6 +131,10 @@ class FileSet implements StackEntry {
 	public Set<String> getFiles() {
 		return fileSet;
 	}
+
+	@Override public String toString() {
+		return "FILE-SET: " + fileSet;
+	}
 }
 
 class FileRead implements StackEntry {
@@ -126,6 +149,10 @@ class FileRead implements StackEntry {
 
 	String getFile() {
 		return file;
+	}
+
+	@Override public String toString() {
+		return "FILE-READ: " + file;
 	}
 }
 
@@ -150,19 +177,17 @@ public class ProvenanceStackMachine implements ASTState.Trace.Receiver {
 		addAndExecute(new AttributeEnd(new AttributeValue(node, attribute, params), attrToFile));
 	}
 
-	public Set<String> getSources(AttributeValue v) {
+	private Set<String> getSources(AttributeValue v) {
 		if (!attrToFile.containsKey(v))
 			return Collections.emptySet();
 		return Collections.unmodifiableSet(attrToFile.get(v));
 	}
 
-
 	public Set<String> getSources(ASTNode n, String attrSig) {
-		return getSources(new AttributeValue(n, attrSig, ""));
-	}
-
-	public Set<String> getSources() {
-		return ((FileSet) stack.peek()).getFiles();
+		Set<String> result = getSources(new AttributeValue(n, attrSig, ""));
+		if (result.isEmpty())
+			return Collections.singleton(n.sourceFile());
+		return result;
 	}
 
 	public void reset() {
@@ -174,11 +199,11 @@ public class ProvenanceStackMachine implements ASTState.Trace.Receiver {
 					   Object params, Object value) {
 		switch (event) {
 		case COMPUTE_BEGIN: {
-			attributeBegin(node, attribute, params);
+			attributeBegin(node, attribute.split("\\.", 2)[1], params);
 			break;
 		}
 		case COMPUTE_END: {
-			attributeEnd(node, attribute, params);
+			attributeEnd(node, attribute.split("\\.", 2)[1], params);
 			break;
 		}
 		}

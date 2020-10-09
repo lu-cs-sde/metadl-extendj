@@ -31,7 +31,7 @@
 
 aspect ErrorCheck {
 
-  protected String ASTNode.sourceFile() {
+  public String ASTNode.sourceFile() {
     ASTNode node = this;
     while (node != null && !(node instanceof CompilationUnit)) {
       node = node.getParent();

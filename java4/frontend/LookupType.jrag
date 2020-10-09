@@ -201,7 +201,10 @@ aspect LookupFullyQualifiedTypes {
     }
 
     if (sourceTypeMap.containsKey(fullName)) {
-      return sourceTypeMap.get(fullName);
+      TypeDecl type = sourceTypeMap.get(fullName);
+      if (!type.isUnknown())
+        provenance.fileRead(type.sourceFile());
+      return type;
     } else {
       sourceTypeMap.put(fullName, unknownType());
     }
@@ -272,7 +275,9 @@ aspect LookupFullyQualifiedTypes {
     }
 
     if (libraryTypeMap.containsKey(fullName)) {
-      return libraryTypeMap.get(fullName);
+      TypeDecl type = libraryTypeMap.get(fullName);
+      provenance.fileRead(type.sourceFile());
+      return type;
     }
 
     // Lookup the type in the library class path.
@@ -292,7 +297,9 @@ aspect LookupFullyQualifiedTypes {
     }
 
     if (libraryTypeMap.containsKey(fullName)) {
-      return libraryTypeMap.get(fullName);
+      TypeDecl type = libraryTypeMap.get(fullName);
+      provenance.fileRead(type.sourceFile());
+      return type;
     } else {
       libraryTypeMap.put(fullName, unknownType());
       return unknownType();
