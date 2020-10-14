@@ -84,12 +84,14 @@ class AttributeEnd implements StackEntry {
 		StackEntry top = stack.pop();
 		assert top == this;
 
+		// lookup a file list for this attribute, if it already
+		// exists
 		Set<String> fileList = attrFileDeps.get(attr);
 		if (fileList == null) {
 			fileList = new HashSet<String>();
-			attrFileDeps.put(attr, fileList);
 		}
 
+		// collect the files read for computing this attribute
 		do {
 			if (stack.peek() instanceof FileRead) {
 				top = stack.pop();
@@ -108,7 +110,10 @@ class AttributeEnd implements StackEntry {
 			}
 		} while (!stack.empty());
 
-		// System.out.println(stack);
+		// if the computation of this attribute used any
+		// files, record them
+		if (!fileList.isEmpty())
+			attrFileDeps.put(attr, fileList);
 
 		return null;
 	}
@@ -185,8 +190,6 @@ public class ProvenanceStackMachine implements ASTState.Trace.Receiver {
 
 	public Set<String> getSources(ASTNode n, String attrSig) {
 		Set<String> result = getSources(new AttributeValue(n, attrSig, ""));
-		if (result.isEmpty())
-			return Collections.singleton(n.sourceFile());
 		return result;
 	}
 
