@@ -1,10 +1,38 @@
 aspect JavaDLInfo {
 	public Object ASTNode.javaDLInfo = null;
 	public int ASTNode.javaDLNum = -1;
+	public int ASTNode.javaDLFileId = -1;
+	public boolean ASTNode.visitedMarker = false;
 
 	public Object ASTNode.type() { return null; }
 	public Object ASTNode.decl() { return null; }
 	public Object ASTNode.genericDecl() { return null; }
+
+	// perform node numbering
+	public int ASTNode.doNodeNumbering(int start, int fileId) {
+		// number the children first
+		for (int i = 0; i < getNumChildNoTransform(); ++i) {
+			start = getChildNoTransform(i).doNodeNumbering(start, fileId);
+			start = getChild(i).doNodeNumbering(start, fileId);
+		}
+
+		// number the current node
+		javaDLNum = start;
+		javaDLFileId = fileId;
+
+		return start + 1;
+	}
+
+	// find the current compilation unit for a given node
+	inh CompilationUnit ASTNode.parentCompilationUnit();
+	eq CompilationUnit.getChild().parentCompilationUnit() = this;
+
+	public interface FileIdStorage {
+		int getIdForFile(String file);
+		int getIdForLib(String lib);
+	}
+
+	public FileIdStorage Program.fileIdStorage = null;
 
 	syn lazy int ASTNode.rpoNum() {
 		if (getNumChild() != 0) {
@@ -65,11 +93,4 @@ aspect JavaDLInfo {
 			return null;
 		return rewrittenNode();
 	}
-
-
-	// eq ASTNode.getChildNoTransform(int i).rewrittenTo() {
-	// 	if (getChildNoTransform(i) != getChild(i))
-	// 		return getChild(i);
-	// 	return null;
-	// }
 }

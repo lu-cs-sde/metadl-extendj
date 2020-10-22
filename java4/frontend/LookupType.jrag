@@ -282,6 +282,8 @@ aspect LookupFullyQualifiedTypes {
 
     // Lookup the type in the library class path.
     CompilationUnit libraryUnit = getLibCompilationUnit(fullName);
+    int fileId = fileIdStorage.getIdForLib(fullName);
+    libraryUnit.doNodeNumbering(1, fileId);
 
     // Store the compilation unit in a set for later introspection of loaded compilation units.
     libraryCompilationUnitSet.add(libraryUnit);
