@@ -333,8 +333,8 @@ aspect ClassPath {
           }
         }
 
-        if (sourcePart != ClassSource.NONE && (classPart == ClassSource.NONE
-              || classPart.lastModified() < sourcePart.lastModified())) {
+        if (sourcePart != ClassSource.NONE) /* && (classPart == ClassSource.NONE
+                                               || classPart.lastModified() < sourcePart.lastModified()))*/ {
           CompilationUnit unit = sourcePart.parseCompilationUnit(program);
           int index = typeName.lastIndexOf('.');
           if (index == -1) {
