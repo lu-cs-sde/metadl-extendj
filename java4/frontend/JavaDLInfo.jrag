@@ -13,7 +13,9 @@ aspect JavaDLInfo {
 		// number the children first
 		for (int i = 0; i < getNumChildNoTransform(); ++i) {
 			start = getChildNoTransform(i).doNodeNumbering(start, fileId);
-			start = getChild(i).doNodeNumbering(start, fileId);
+			if (getChild(i) != getChildNoTransform(i)) {
+				start = getChild(i).doNodeNumbering(start, fileId);
+			}
 		}
 
 		// number the current node
