@@ -12,9 +12,12 @@ aspect JavaDLInfo {
 	public int ASTNode.doNodeNumbering(int start, int fileId) {
 		// number the children first
 		for (int i = 0; i < getNumChildNoTransform(); ++i) {
-			start = getChildNoTransform(i).doNodeNumbering(start, fileId);
-			if (getChild(i) != getChildNoTransform(i)) {
-				start = getChild(i).doNodeNumbering(start, fileId);
+			ASTNode child = getChildNoTransform(i);
+			if (child != null) {
+				start = child.doNodeNumbering(start, fileId);
+				if (getChild(i) != child) {
+					start = getChild(i).doNodeNumbering(start, fileId);
+				}
 			}
 		}
 
