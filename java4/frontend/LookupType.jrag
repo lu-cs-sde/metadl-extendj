@@ -222,9 +222,6 @@ aspect LookupFullyQualifiedTypes {
     for (int i = 0; i < getNumCompilationUnit(); i++) {
       CompilationUnit unit = getCompilationUnit(i);
 
-	  int fileId = fileIdStorage.getIdForLib(unit.getClassSource().pathName());
-	  unit.doNodeNumbering(fileId);
-
       for (int j = 0; j < unit.getNumTypeDecl(); j++) {
         TypeDecl type = unit.getTypeDecl(j);
         sourceTypeMap.put(type.fullName(), type);
@@ -298,10 +295,6 @@ aspect LookupFullyQualifiedTypes {
         libraryTypeMap.put(type.fullName(), type);
       }
     }
-
-
-	int fileId = fileIdStorage.getIdForLib(libraryUnit.getClassSource().pathName());
-	libraryUnit.doNodeNumbering(fileId);
 
 
     if (libraryTypeMap.containsKey(fullName)) {

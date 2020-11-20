@@ -3,40 +3,116 @@ aspect JavaDLInfo {
 	public int ASTNode.javaDLNum = -1;
 	public int ASTNode.javaDLFileId = -1;
 	public boolean ASTNode.visitedMarker = false;
+	public long ASTNode.javaDLNodeId = -1;
 
 	public Object ASTNode.type() { return null; }
 	public Object ASTNode.decl() { return null; }
 	public Object ASTNode.genericDecl() { return null; }
 
-	// perform node numbering
-	public int ASTNode.doNodeNumbering(int start, int fileId) {
+	syn lazy ASTNode[] ASTNode.frozenChildren() = new ASTNode[getNumChildNoTransform()];
+	public ASTNode ASTNode.getFrozenChild(int i) {
+		return getChild(i);
+		// ASTNode[] frozenChildren = frozenChildren();
+		// if (frozenChildren[i] == null) {
+		// 	frozenChildren[i] = getChild(i);
+		// }
+		// return frozenChildren[i];
+	}
+
+	/** Perform node numbering for NTAs. We do this depth-first, just
+		because it's easier to implement. */
+	public long ASTNode.doNodeNumberingNTA(long start, Map<ASTNode, Long> nodeToId) {
+		nodeToId.put(this, start);
+		start++;
+
 		// number the children first
 		for (int i = 0; i < getNumChildNoTransform(); ++i) {
 			ASTNode child = getChildNoTransform(i);
 			if (child != null) {
-				start = child.doNodeNumbering(start, fileId);
-				if (getChild(i) != child) {
-					start = getChild(i).doNodeNumbering(start, fileId);
+				start = child.doNodeNumberingNTA(start, nodeToId);
+				if (getFrozenChild(i) != child) {
+					start = getFrozenChild(i).doNodeNumberingNTA(start, nodeToId);
 				}
 			}
 		}
 
-		// number the current node
-		javaDLNum = start;
-		javaDLFileId = fileId;
-
-		return start + 1;
+		return start;
 	}
 
-	public int CompilationUnit.doNodeNumbering(int fileId) {
-		if (javaDLNum < 0)
-			return doNodeNumbering(1, fileId);
-		return 1;
+	/**
+		Node numbering for AST nodes (including rewritten ones). Set last = null,
+		to number all nodes.
+	 */
+	private Queue<ASTNode> CompilationUnit.nodeNumberingQueue = new ArrayDeque<ASTNode>(Collections.<ASTNode>singleton(this));
+	private int CompilationUnit.currentNodeIdx = 1;
+	public boolean CompilationUnit.numberNodesUntil(ASTNode last, int fileId, Map<ASTNode, Long> nodeToId) {
+		while (!nodeNumberingQueue.isEmpty()) {
+			ASTNode n = nodeNumberingQueue.poll();
+			nodeToId.put(n, (((long) fileId) << 32) | currentNodeIdx);
+			currentNodeIdx++;
+			for (int i = 0; i < n.getNumChildNoTransform(); ++i) {
+				ASTNode childNT = n.getChildNoTransform(i);
+				if (childNT == null)
+					continue;
+				nodeNumberingQueue.add(childNT);
+				if (childNT.mayHaveRewrite()) {
+					ASTNode child = n.getFrozenChild(i);
+					if (child != childNT && child != null) {
+						nodeNumberingQueue.add(child);
+					}
+				}
+			}
+
+			if (n == last) {
+				// we reached the node we wanted to be numbered; return
+				return true;
+			}
+		}
+		// we haven't found the node to be numbered;
+		// this should not happen, but maybe it does
+		return false;
 	}
 
-	// find the current compilation unit for a given node
-	inh CompilationUnit ASTNode.parentCompilationUnit();
-	eq CompilationUnit.getChild().parentCompilationUnit() = this;
+	public void CompilationUnit.numberAllNodes(FileIdStorage fidStorage, Map<ASTNode, Long> nodeToId) {
+		int fileId = fidStorage.getIdForLib(this.getClassSource().pathName());
+		this.numberNodesUntil(null, fileId, nodeToId);
+	}
+
+	public void ASTNode.printNodesBelow() {
+		System.out.println(this);
+		if (getParent() != null)
+			getParent().printNodesBelow();
+	}
+
+	/**
+	   Find the compilation unit for this node, if it's not
+	   an NTA.
+	 */
+	syn lazy CompilationUnit ASTNode.parentCompilationUnit() {
+		if (this instanceof CompilationUnit) {
+			return (CompilationUnit) this;
+		}
+		if (this.childIndex == -1) {
+			return null;
+		}
+		if (getParent() != null) {
+			return getParent().parentCompilationUnit();
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	   Number this node on-demand. The numbering is successful if this
+	   is a non-NTA node (may be a rewritten node).
+	 */
+	public boolean ASTNode.numberOnDemand(FileIdStorage fidStorage, Map<ASTNode, Long> nodeToId) {
+		CompilationUnit cu = parentCompilationUnit();
+		if (cu == null)
+			return false;
+		int fileId = fidStorage.getIdForLib(cu.getClassSource().pathName());
+		return cu.numberNodesUntil(this, fileId, nodeToId);
+	}
 
 	public interface FileIdStorage {
 		int getIdForFile(String file);
