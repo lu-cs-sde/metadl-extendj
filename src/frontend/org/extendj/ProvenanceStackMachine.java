@@ -182,6 +182,11 @@ public class ProvenanceStackMachine implements ASTState.Trace.Receiver {
 		addAndExecute(new AttributeEnd(new AttributeValue(node, attribute, params), attrToFile));
 	}
 
+	public void cacheRead(ASTNode node, String attribute, Object params) {
+		Set<String> files = attrToFile.getOrDefault(new AttributeValue(node, attribute, params), Collections.<String>emptySet());
+		addAndExecute(new FileSet(files));
+	}
+
 	private Set<String> getSources(AttributeValue v) {
 		if (!attrToFile.containsKey(v))
 			return Collections.emptySet();
@@ -201,6 +206,10 @@ public class ProvenanceStackMachine implements ASTState.Trace.Receiver {
 	public void accept(ASTState.Trace.Event event, ASTNode node, String attribute,
 					   Object params, Object value) {
 		switch (event) {
+		case CACHE_READ: {
+			cacheRead(node, attribute.split("\\.", 2)[1], params);
+			break;
+		}
 		case COMPUTE_BEGIN: {
 			attributeBegin(node, attribute.split("\\.", 2)[1], params);
 			break;
