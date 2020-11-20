@@ -221,6 +221,10 @@ aspect LookupFullyQualifiedTypes {
     // Initialize source type map with the compilation units supplied by Program.addSourceFile.
     for (int i = 0; i < getNumCompilationUnit(); i++) {
       CompilationUnit unit = getCompilationUnit(i);
+
+	  int fileId = fileIdStorage.getIdForLib(unit.getClassSource().pathName());
+	  unit.doNodeNumbering(fileId);
+
       for (int j = 0; j < unit.getNumTypeDecl(); j++) {
         TypeDecl type = unit.getTypeDecl(j);
         sourceTypeMap.put(type.fullName(), type);
@@ -282,9 +286,6 @@ aspect LookupFullyQualifiedTypes {
 
     // Lookup the type in the library class path.
     CompilationUnit libraryUnit = getLibCompilationUnit(fullName);
-    int fileId = fileIdStorage.getIdForLib(libraryUnit.getClassSource().pathName());
-    libraryUnit.doNodeNumbering(1, fileId);
-
     // Store the compilation unit in a set for later introspection of loaded compilation units.
     libraryCompilationUnitSet.add(libraryUnit);
 
@@ -297,6 +298,11 @@ aspect LookupFullyQualifiedTypes {
         libraryTypeMap.put(type.fullName(), type);
       }
     }
+
+
+	int fileId = fileIdStorage.getIdForLib(libraryUnit.getClassSource().pathName());
+	libraryUnit.doNodeNumbering(fileId);
+
 
     if (libraryTypeMap.containsKey(fullName)) {
       TypeDecl type = libraryTypeMap.get(fullName);

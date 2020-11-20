@@ -28,6 +28,12 @@ aspect JavaDLInfo {
 		return start + 1;
 	}
 
+	public int CompilationUnit.doNodeNumbering(int fileId) {
+		if (javaDLNum < 0)
+			return doNodeNumbering(1, fileId);
+		return 1;
+	}
+
 	// find the current compilation unit for a given node
 	inh CompilationUnit ASTNode.parentCompilationUnit();
 	eq CompilationUnit.getChild().parentCompilationUnit() = this;
