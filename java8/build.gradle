@@ -14,7 +14,7 @@ jastadd {
 	parser.genDir = 'src/gen/org/extendj/parser'
 	scanner.genDir = 'src/gen/org/extendj/scanner'
 
-    extraJastAddOptions = [ '--tracing=compute', '--tracing=cache' ]
+    extraJastAddOptions = [ '--tracing=compute,cache' ]
   if (project.hasProperty('extraJastAddOptions')) {
     extraJastAddOptions += project.extraJastAddOptions.split(',') as List
     print("options: ${extraJastAddOptions}")
