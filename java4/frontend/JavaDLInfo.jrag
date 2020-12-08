@@ -73,11 +73,6 @@ aspect JavaDLInfo {
 		return false;
 	}
 
-	public void CompilationUnit.numberAllNodes(FileIdStorage fidStorage, Map<ASTNode, Long> nodeToId) {
-		int fileId = fidStorage.getIdForLib(this.getClassSource().pathName());
-		this.numberNodesUntil(null, fileId, nodeToId);
-	}
-
 	public void ASTNode.printNodesBelow() {
 		System.out.println(this);
 		if (getParent() != null)
@@ -92,14 +87,16 @@ aspect JavaDLInfo {
 		if (this instanceof CompilationUnit) {
 			return (CompilationUnit) this;
 		}
-		if (this.childIndex == -1) {
-			return null;
-		}
 		if (getParent() != null) {
-			return getParent().parentCompilationUnit();
-		} else {
-			return null;
+			ASTNode parent = getParent();
+			if (parent.getIndexOfChild(this) >= 0 &&
+				parent.getIndexOfChild(this) < parent.getNumChild()) {
+				// check that the child is not an NTA child
+				return getParent().parentCompilationUnit();
+			}
 		}
+
+		return null;
 	}
 
 	/**
@@ -110,7 +107,7 @@ aspect JavaDLInfo {
 		CompilationUnit cu = parentCompilationUnit();
 		if (cu == null)
 			return false;
-		int fileId = fidStorage.getIdForLib(cu.getClassSource().pathName());
+		int fileId = fidStorage.getIdForLib(cu.getClassSource().relativeName());
 		return cu.numberNodesUntil(this, fileId, nodeToId);
 	}
 
