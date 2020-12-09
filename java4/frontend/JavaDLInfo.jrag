@@ -9,16 +9,6 @@ aspect JavaDLInfo {
 	public Object ASTNode.decl() { return null; }
 	public Object ASTNode.genericDecl() { return null; }
 
-	syn lazy ASTNode[] ASTNode.frozenChildren() = new ASTNode[getNumChildNoTransform()];
-	public ASTNode ASTNode.getFrozenChild(int i) {
-		return getChild(i);
-		// ASTNode[] frozenChildren = frozenChildren();
-		// if (frozenChildren[i] == null) {
-		// 	frozenChildren[i] = getChild(i);
-		// }
-		// return frozenChildren[i];
-	}
-
 	/** Perform node numbering for NTAs. We do this depth-first, just
 		because it's easier to implement. */
 	public long ASTNode.doNodeNumberingNTA(long start, Map<ASTNode, Long> nodeToId) {
@@ -30,8 +20,8 @@ aspect JavaDLInfo {
 			ASTNode child = getChildNoTransform(i);
 			if (child != null) {
 				start = child.doNodeNumberingNTA(start, nodeToId);
-				if (getFrozenChild(i) != child) {
-					start = getFrozenChild(i).doNodeNumberingNTA(start, nodeToId);
+				if (getChild(i) != child) {
+					start = getChild(i).doNodeNumberingNTA(start, nodeToId);
 				}
 			}
 		}
@@ -45,7 +35,7 @@ aspect JavaDLInfo {
 	 */
 	private Queue<ASTNode> CompilationUnit.nodeNumberingQueue = new ArrayDeque<ASTNode>(Collections.<ASTNode>singleton(this));
 	private int CompilationUnit.currentNodeIdx = 1;
-	public boolean CompilationUnit.numberNodesUntil(ASTNode last, int fileId, Map<ASTNode, Long> nodeToId) {
+	public boolean CompilationUnit.numberNodesUntil(ASTNode last, int fileId, Map<ASTNode, Long> nodeToId, boolean visitRewrittenChildren) {
 		while (!nodeNumberingQueue.isEmpty()) {
 			ASTNode n = nodeNumberingQueue.poll();
 			nodeToId.put(n, (((long) fileId) << 32) | currentNodeIdx);
@@ -55,8 +45,8 @@ aspect JavaDLInfo {
 				if (childNT == null)
 					continue;
 				nodeNumberingQueue.add(childNT);
-				if (childNT.mayHaveRewrite()) {
-					ASTNode child = n.getFrozenChild(i);
+				if (visitRewrittenChildren && childNT.mayHaveRewrite()) {
+					ASTNode child = n.getChild(i);
 					if (child != childNT && child != null) {
 						nodeNumberingQueue.add(child);
 					}
@@ -108,7 +98,7 @@ aspect JavaDLInfo {
 		if (cu == null)
 			return false;
 		int fileId = fidStorage.getIdForLib(cu.getClassSource().relativeName());
-		return cu.numberNodesUntil(this, fileId, nodeToId);
+		return cu.numberNodesUntil(this, fileId, nodeToId, cu.fromSource());
 	}
 
 	public interface FileIdStorage {
