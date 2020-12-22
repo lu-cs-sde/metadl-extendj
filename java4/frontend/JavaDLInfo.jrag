@@ -8,6 +8,8 @@ aspect JavaDLInfo {
 	public Object ASTNode.type() { return null; }
 	public Object ASTNode.decl() { return null; }
 	public Object ASTNode.genericDecl() { return null; }
+	public boolean ASTNode.isGeneric() { return false; }
+	public boolean ParTypeDecl.isGeneric() { return true; }
 
 	/** Perform node numbering for NTAs. We do this depth-first, just
 		because it's easier to implement. */
