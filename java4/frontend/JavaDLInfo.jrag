@@ -18,13 +18,10 @@ aspect JavaDLInfo {
 		start++;
 
 		// number the children first
-		for (int i = 0; i < getNumChildNoTransform(); ++i) {
-			ASTNode child = getChildNoTransform(i);
+		for (int i = 0; i < getNumChild(); ++i) {
+			ASTNode child = getChild(i);
 			if (child != null) {
 				start = child.doNodeNumberingNTA(start, nodeToId);
-				if (getChild(i) != child) {
-					start = getChild(i).doNodeNumberingNTA(start, nodeToId);
-				}
 			}
 		}
 
@@ -42,17 +39,11 @@ aspect JavaDLInfo {
 			ASTNode n = nodeNumberingQueue.poll();
 			nodeToId.put(n, (((long) fileId) << 32) | currentNodeIdx);
 			currentNodeIdx++;
-			for (int i = 0; i < n.getNumChildNoTransform(); ++i) {
-				ASTNode childNT = n.getChildNoTransform(i);
-				if (childNT == null)
+			for (int i = 0; i < (visitRewrittenChildren ? n.getNumChild() : n.getNumChildNoTransform()); ++i) {
+				ASTNode child = visitRewrittenChildren ? n.getChild(i) : n.getChildNoTransform(i);
+				if (child == null)
 					continue;
-				nodeNumberingQueue.add(childNT);
-				if (visitRewrittenChildren && childNT.mayHaveRewrite()) {
-					ASTNode child = n.getChild(i);
-					if (child != childNT && child != null) {
-						nodeNumberingQueue.add(child);
-					}
-				}
+				nodeNumberingQueue.add(child);
 			}
 
 			if (n == last) {
