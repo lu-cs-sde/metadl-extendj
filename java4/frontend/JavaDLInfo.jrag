@@ -1,10 +1,4 @@
 aspect JavaDLInfo {
-	public Object ASTNode.javaDLInfo = null;
-	public int ASTNode.javaDLNum = -1;
-	public int ASTNode.javaDLFileId = -1;
-	public boolean ASTNode.visitedMarker = false;
-	public long ASTNode.javaDLNodeId = -1;
-
 	public Object ASTNode.type() { return null; }
 	public Object ASTNode.decl() { return null; }
 	public Object ASTNode.genericDecl() { return null; }
@@ -13,7 +7,7 @@ aspect JavaDLInfo {
 
 	/** Perform node numbering for NTAs. We do this depth-first, just
 		because it's easier to implement. */
-	public long ASTNode.doNodeNumberingNTA(long start, Map<ASTNode, Long> nodeToId) {
+	long ASTNode.doNodeNumberingNTA(long start, Map<ASTNode, Long> nodeToId) {
 		nodeToId.put(this, start);
 		start++;
 
@@ -84,14 +78,158 @@ aspect JavaDLInfo {
 
 	/**
 	   Number this node on-demand. The numbering is successful if this
-	   is a non-NTA node (may be a rewritten node).
+	   is a non-NTA node.
 	 */
 	public boolean ASTNode.numberOnDemand(FileIdStorage fidStorage, Map<ASTNode, Long> nodeToId) {
+		// Number the nodes in the compilation unit of the node
 		CompilationUnit cu = parentCompilationUnit();
-		if (cu == null)
-			return false;
-		int fileId = fidStorage.getIdForLib(cu.getClassSource().relativeName());
-		return cu.numberNodesUntil(this, fileId, nodeToId, !cu.fromSource());
+		if (cu != null) {
+			// this is a true AST node, not an NTA
+			int fileId = fidStorage.getIdForLib(cu.getClassSource().relativeName());
+			if (cu.numberNodesUntil(this, fileId, nodeToId, !cu.fromSource())) {
+				return true;
+			}
+		}
+
+		// NTAs for primitive types
+		if (this.numberPrimitiveType(nodeToId)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public long ASTNode.nodeId(FileIdStorage fidStorage, Map<ASTNode, Long> nodeToId) {
+		Long id = nodeToId.get(this);
+		if (id != null) {
+			return id;
+		}
+
+		if (this.numberOnDemand(fidStorage, nodeToId)) {
+			return nodeToId.get(this);
+		}
+
+		// This is a NTA. Try to find the original node it comes from
+		ASTNode unwrappedNode = this.unwrapNTANode();
+		if (unwrappedNode != null) {
+			return unwrappedNode.nodeId(fidStorage, nodeToId);
+		}
+
+		return -1;
+	}
+
+	// Node numbers for primitive types
+	public boolean ASTNode.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		return false;
+	}
+
+	public boolean BooleanType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(100, nodeToId);
+		return true;
+	}
+
+	public boolean ByteType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(200, nodeToId);
+		return true;
+	}
+
+	public boolean ShortType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(300, nodeToId);
+		return true;
+	}
+
+	public boolean CharType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(400, nodeToId);
+		return true;
+	}
+
+	public boolean IntType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(500, nodeToId);
+		return true;
+	}
+
+	public boolean LongType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(600, nodeToId);
+		return true;
+	}
+
+	public boolean FloatType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(700, nodeToId);
+		return true;
+	}
+
+	public boolean DoubleType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(800, nodeToId);
+		return true;
+	}
+
+	public boolean VoidType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(900, nodeToId);
+		return true;
+	}
+
+	public boolean NullType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(1000, nodeToId);
+		return true;
+	}
+
+	public boolean UnknownType.numberPrimitiveType(Map<ASTNode, Long> nodeToId) {
+		doNodeNumberingNTA(2000, nodeToId);
+		return true;
+	}
+	// ================================================================================
+
+	// Unwrap nodes that are NTAs to their inner (hopefuly) non-NTA node
+	public ASTNode ASTNode.unwrapNTANode() {
+		return null;
+	}
+
+	public ASTNode MethodDeclSubstituted.unwrapNTANode() {
+		return getOriginal();
+	}
+
+	public ASTNode GenericMethodDeclSubstituted.unwrapNTANode() {
+		return getOriginal();
+	}
+
+	public ASTNode GenericMethodDeclErased.unwrapNTANode() {
+		return getOriginal();
+	}
+
+	public ASTNode ConstructorDeclSubstituted.unwrapNTANode() {
+		return sourceConstructorDecl();
+	}
+
+	public ASTNode GenericConstructorDeclSubstituted.unwrapNTANode() {
+		return getOriginal();
+	}
+
+	public ASTNode GenericConstructorDeclErased.unwrapNTANode() {
+		return getOriginal();
+	}
+
+	public ASTNode FieldDeclSubstituted.unwrapNTANode() {
+		return getOriginal();
+	}
+
+	public ASTNode FieldDeclarationSubstituted.unwrapNTANode() {
+		return getOriginal();
+	}
+
+	public ASTNode ParClassDecl.unwrapNTANode() {
+		return original();
+	}
+
+	public ASTNode ParInterfaceDecl.unwrapNTANode() {
+		return original();
+	}
+
+	public ASTNode ParMethodDecl.unwrapNTANode() {
+		return genericMethodDecl();
+	}
+
+	public ASTNode ParConstructorDecl.unwrapNTANode() {
+		return genericConstructorDecl();
 	}
 
 	public interface FileIdStorage {
