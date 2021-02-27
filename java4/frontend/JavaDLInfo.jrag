@@ -109,12 +109,11 @@ aspect JavaDLInfo {
 			return nodeToId.get(this);
 		}
 
-		// This is a NTA. Try to find the original node it comes from
-		ASTNode unwrappedNode = this.unwrapNTANode();
-		if (unwrappedNode != null) {
-			return unwrappedNode.nodeId(fidStorage, nodeToId);
-		}
-
+		// // This is a NTA. Try to find the original node it comes from
+		// ASTNode unwrappedNode = this.unwrapNTANode();
+		// if (unwrappedNode != null) {
+		// 	return unwrappedNode.nodeId(fidStorage, nodeToId);
+		// }
 		return -1;
 	}
 
