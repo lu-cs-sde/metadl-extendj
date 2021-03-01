@@ -28,13 +28,13 @@ aspect JavaDLInfo {
 	 */
 	private Queue<ASTNode> CompilationUnit.nodeNumberingQueue = new ArrayDeque<ASTNode>(Collections.<ASTNode>singleton(this));
 	private int CompilationUnit.currentNodeIdx = 1;
-	boolean CompilationUnit.numberNodesUntil(ASTNode last, int fileId, Map<ASTNode, Long> nodeToId, boolean visitNoTransform) {
+	boolean CompilationUnit.numberNodesUntil(ASTNode last, int fileId, Map<ASTNode, Long> nodeToId) {
 		while (!nodeNumberingQueue.isEmpty()) {
 			ASTNode n = nodeNumberingQueue.poll();
 			nodeToId.put(n, (((long) fileId) << 32) | currentNodeIdx);
 			currentNodeIdx++;
-			for (int i = 0; i < (visitNoTransform ? n.getNumChildNoTransform() : n.getNumChild()); ++i) {
-				ASTNode child = visitNoTransform ? n.getChildNoTransform(i) : n.getChild(i);
+			for (int i = 0; i < n.getNumChild(); ++i) {
+				ASTNode child = n.getChild(i);
 				if (child == null)
 					continue;
 				nodeNumberingQueue.add(child);
@@ -86,7 +86,7 @@ aspect JavaDLInfo {
 		if (cu != null) {
 			// this is a true AST node, not an NTA
 			int fileId = fidStorage.getIdForLib(cu.getClassSource().relativeName());
-			if (cu.numberNodesUntil(this, fileId, nodeToId, !cu.fromSource())) {
+			if (cu.numberNodesUntil(this, fileId, nodeToId)) {
 				return true;
 			}
 		}
