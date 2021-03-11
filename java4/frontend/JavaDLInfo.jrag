@@ -5,6 +5,10 @@ aspect JavaDLInfo {
 	public boolean ASTNode.isGeneric() { return false; }
 	public boolean ParTypeDecl.isGeneric() { return true; }
 
+	syn TypeDecl ParTypeAccess.decl() {
+		return genericDecl();
+	}
+
 	/** Perform node numbering for NTAs. We do this depth-first, just
 		because it's easier to implement. */
 	long ASTNode.doNodeNumberingNTA(long start, Map<ASTNode, Long> nodeToId) {
@@ -237,64 +241,4 @@ aspect JavaDLInfo {
 	}
 
 	public FileIdStorage Program.fileIdStorage = null;
-
-	syn lazy int ASTNode.rpoNum() {
-		if (getNumChild() != 0) {
-			ASTNode lastChild = getChild(getNumChild() - 1);
-			if (lastChild.rpoNum() != NTACHILD)
-				return lastChild.rpoNum() + 1;
-			return NTACHILD;
-		} else {
-			int ls = leftSiblingsRpoNum();
-			if (ls != NTACHILD)
-				return ls + 1;
-			else
-				return NTACHILD;
-		}
-	}
-
-	static int ASTNode.NOLEFTSIBLING = -1;
-	static int ASTNode.NTACHILD = -2;
-
-	inh lazy int ASTNode.leftSiblingsRpoNum();
-	eq ASTNode.getChild(int i).leftSiblingsRpoNum() {
-		if (i == 0) {
-			if (this instanceof CompilationUnit)
-				return NOLEFTSIBLING;
-			else return leftSiblingsRpoNum();
-		} else if (i > 0) {
-			return getChild(i - 1).rpoNum();
-		} else {
-			// i < 0, this is not a proper child, it is an NTA
-			return NTACHILD;
-		}
-	}
-
-	inh lazy ASTNode ASTNode.leftSibling();
-
-	eq ASTNode.getChild(int i).leftSibling() {
-		if (i == 0) {
-			if (this instanceof CompilationUnit)
-				return null;
-			return this.leftSibling();
-		} else {
-			return getChild(i - 1);
-		}
-	}
-
-	inh ASTNode ASTNode.rewrittenFrom();
-	eq ASTNode.getChild(int i).rewrittenFrom() {
-		if (i < 0)
-			return null;
-
-		if (getChildNoTransform(i) != getChild(i))
-			return getChildNoTransform(i);
-		return null;
-	}
-
-	syn ASTNode ASTNode.rewrittenTo() {
-		if (!canRewrite())
-			return null;
-		return rewrittenNode();
-	}
 }
