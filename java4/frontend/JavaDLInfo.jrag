@@ -5,6 +5,13 @@ aspect JavaDLInfo {
 	public boolean ASTNode.isGeneric() { return false; }
 	public boolean ParTypeDecl.isGeneric() { return true; }
 
+
+	public boolean ASTNode.isPrivate() { return false; }
+	public boolean ASTNode.isPackage() { return false; }
+	public boolean ASTNode.isPrivateOrPackage() {
+		return isPrivate() || isPackage();
+	}
+
 	syn TypeDecl ParTypeAccess.decl() {
 		return genericDecl();
 	}
