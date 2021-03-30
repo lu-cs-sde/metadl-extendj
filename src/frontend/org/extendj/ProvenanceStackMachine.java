@@ -28,7 +28,7 @@ class AttributeValue {
 		if (!(other instanceof AttributeValue))
 			return false;
 		AttributeValue attr = (AttributeValue) other;
-		return n.equals(attr.n)
+		return n == attr.n // reference equality for nodes
 			&& attribute.equals(attr.attribute)
 			&& params.equals(attr.params);
 	}
@@ -187,15 +187,10 @@ public class ProvenanceStackMachine implements ASTState.Trace.Receiver {
 		addAndExecute(new FileSet(files));
 	}
 
-	private Set<String> getSources(AttributeValue v) {
-		if (!attrToFile.containsKey(v))
+	public Set<String> getSourcesFromTopOfStack() {
+		if (stack.empty())
 			return Collections.emptySet();
-		return Collections.unmodifiableSet(attrToFile.get(v));
-	}
-
-	public Set<String> getSources(ASTNode n, String attrSig) {
-		Set<String> result = getSources(new AttributeValue(n, attrSig, ""));
-		return result;
+		return ((FileSet) stack.peek()).getFiles();
 	}
 
 	public void reset() {
@@ -207,15 +202,15 @@ public class ProvenanceStackMachine implements ASTState.Trace.Receiver {
 					   Object params, Object value) {
 		switch (event) {
 		case CACHE_READ: {
-			cacheRead(node, attribute.split("\\.", 2)[1], params);
+			cacheRead(node, attribute, params);
 			break;
 		}
 		case COMPUTE_BEGIN: {
-			attributeBegin(node, attribute.split("\\.", 2)[1], params);
+			attributeBegin(node, attribute, params);
 			break;
 		}
 		case COMPUTE_END: {
-			attributeEnd(node, attribute.split("\\.", 2)[1], params);
+			attributeEnd(node, attribute, params);
 			break;
 		}
 		}
