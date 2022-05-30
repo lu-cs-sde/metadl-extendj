@@ -91,7 +91,7 @@ aspect JavaDLInfo {
 	   Number this node on-demand. The numbering is successful if this
 	   is a non-NTA node.
 	 */
-	public boolean ASTNode.numberOnDemand(FileIdStorage fidStorage, Map<ASTNode, Long> nodeToId) {
+	private boolean ASTNode.numberOnDemand(FileIdStorage fidStorage, Map<ASTNode, Long> nodeToId) {
 		// Number the nodes in the compilation unit of the node
 		CompilationUnit cu = parentCompilationUnit();
 		if (cu != null) {
